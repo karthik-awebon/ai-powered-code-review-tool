@@ -4,10 +4,14 @@ import { useState, FormEvent } from 'react';
 import { submitPRReview } from '../../app/actions/review';
 import { AiReviewComment as AiReviewCommentType } from '../../types';
 import { ReviewComment } from '../ui/ReviewComment';
+import { EmptyState } from '../ui/EmptyState';
+import { SkeletonComment } from '../ui/SkeletonComment';
+
+type Status = 'idle' | 'fetching' | 'generating' | 'done';
 
 export function ReviewForm() {
   const [url, setUrl] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [status, setStatus] = useState<Status>('idle');
   const [error, setError] = useState<string | null>(null);
   const [comments, setComments] = useState<AiReviewCommentType[]>([]);
 
@@ -15,7 +19,7 @@ export function ReviewForm() {
     e.preventDefault();
     if (!url) return;
 
-    setLoading(true);
+    setStatus('fetching');
     setError(null);
     setComments([]);
 
@@ -24,21 +28,28 @@ export function ReviewForm() {
       
       if ('error' in result) {
         setError(result.error);
-        setLoading(false);
+        setStatus('idle');
         return;
       }
 
+      setStatus('generating');
       // result is AsyncIterable<AiReviewComment>
       // We iterate over the stream
       for await (const comment of result) {
         setComments((prev) => [...prev, comment]);
       }
+      setStatus('done');
     } catch (err: any) {
       setError(err.message || 'An unexpected error occurred.');
-    } finally {
-      setLoading(false);
+      setStatus('idle');
     }
   };
+
+  const isWorking = status === 'fetching' || status === 'generating';
+  
+  let buttonText = 'Review PR';
+  if (status === 'fetching') buttonText = 'Fetching PR...';
+  if (status === 'generating') buttonText = 'Analyzing...';
 
   return (
     <div style={{ maxWidth: '800px', margin: '0 auto', width: '100%' }}>
@@ -61,7 +72,7 @@ export function ReviewForm() {
         />
         <button
           type="submit"
-          disabled={loading}
+          disabled={isWorking}
           style={{
             padding: '10px 20px',
             borderRadius: '6px',
@@ -70,11 +81,11 @@ export function ReviewForm() {
             color: '#fff',
             fontSize: '16px',
             fontWeight: 600,
-            cursor: loading ? 'not-allowed' : 'pointer',
-            opacity: loading ? 0.7 : 1
+            cursor: isWorking ? 'not-allowed' : 'pointer',
+            opacity: isWorking ? 0.7 : 1
           }}
         >
-          {loading ? 'Reviewing...' : 'Review PR'}
+          {buttonText}
         </button>
       </form>
 
@@ -85,6 +96,16 @@ export function ReviewForm() {
       )}
 
       <div>
+        {status === 'idle' && comments.length === 0 && !error && <EmptyState />}
+        
+        {isWorking && comments.length === 0 && (
+          <>
+            <SkeletonComment />
+            <SkeletonComment />
+            <SkeletonComment />
+          </>
+        )}
+
         {comments.map((comment) => (
           <ReviewComment key={comment.id} comment={comment} />
         ))}
