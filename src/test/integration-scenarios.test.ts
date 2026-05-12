@@ -12,6 +12,10 @@ vi.mock('ai', () => ({
   streamObject: vi.fn(),
 }));
 
+vi.mock('../auth', () => ({
+  auth: vi.fn().mockResolvedValue(null),
+}));
+
 // Mock logger to avoid noise
 vi.mock('../utils/logger', () => ({
   logger: {

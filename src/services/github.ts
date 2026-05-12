@@ -55,18 +55,26 @@ export function parsePRInput(input: string, defaultRepo?: string): GitHubPRDetai
  * @param owner - The owner of the repository.
  * @param repo - The name of the repository.
  * @param pullNumber - The pull request number.
+ * @param accessToken - Optional GitHub access token for authenticated requests (enables private repos).
  * @returns A promise that resolves to the diff string.
  * @throws Error if the fetch fails or the response is not OK.
  */
-export async function fetchPRDiff(owner: string, repo: string, pullNumber: number): Promise<string> {
+export async function fetchPRDiff(owner: string, repo: string, pullNumber: number, accessToken?: string): Promise<string> {
   const url = `${APP_CONFIG.GITHUB.BASE_URL}/repos/${owner}/${repo}/pulls/${pullNumber}`;
   
-  logger.debug({ owner, repo, pullNumber }, 'Fetching diff from GitHub API');
+  logger.debug({ owner, repo, pullNumber, authenticated: !!accessToken }, 'Fetching diff from GitHub API');
+  
+  const headers: HeadersInit = {
+    Accept: 'application/vnd.github.v3.diff',
+    'X-GitHub-Api-Version': APP_CONFIG.GITHUB.API_VERSION
+  };
+
+  if (accessToken) {
+    headers.Authorization = `Bearer ${accessToken}`;
+  }
+
   const response = await fetch(url, {
-    headers: {
-      Accept: 'application/vnd.github.v3.diff',
-      'X-GitHub-Api-Version': APP_CONFIG.GITHUB.API_VERSION
-    },
+    headers,
     next: { revalidate: APP_CONFIG.GITHUB.REVALIDATE_SECONDS }
   });
 

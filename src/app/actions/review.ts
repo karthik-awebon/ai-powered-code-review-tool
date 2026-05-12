@@ -4,6 +4,7 @@ import { parsePRInput, fetchPRDiff } from '../../services/github';
 import { getLLMReviewStream } from '../../services/llm';
 import { AiReviewComment } from '../../types';
 import { logger } from '../../utils/logger';
+import { auth } from '../../auth';
 
 /**
  * Server action to initiate a pull request review.
@@ -23,8 +24,11 @@ export async function submitPRReview(input: string, defaultRepo?: string): Promi
   }
 
   try {
-    logger.info({ ...prDetails }, 'Fetching PR diff');
-    const diff = await fetchPRDiff(prDetails.owner, prDetails.repo, prDetails.pullNumber);
+    const session = await auth();
+    const accessToken = session?.accessToken;
+
+    logger.info({ ...prDetails, authenticated: !!accessToken }, 'Fetching PR diff');
+    const diff = await fetchPRDiff(prDetails.owner, prDetails.repo, prDetails.pullNumber, accessToken);
 
     logger.info({ diff }, 'PR diff fetched successfully, starting LLM review stream');
     return getLLMReviewStream(diff);

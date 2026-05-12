@@ -3,6 +3,10 @@ import { submitPRReview } from './review';
 import * as github from '../../services/github';
 import * as llm from '../../services/llm';
 
+vi.mock('../../auth', () => ({
+  auth: vi.fn(),
+}));
+
 vi.mock('../../services/github', () => ({
   parsePRInput: vi.fn(),
   fetchPRDiff: vi.fn(),
@@ -32,18 +36,20 @@ describe('submitPRReview', () => {
     expect(result).toEqual({ error: 'Invalid GitHub PR input format' });
   });
 
-  it('successfully returns LLM review stream', async () => {
+  it('successfully returns LLM review stream with auth token', async () => {
     const prDetails = { owner: 'owner', repo: 'repo', pullNumber: 123 };
     const mockDiff = 'diff content';
     const mockStream = (async function* () {})();
+    const { auth } = await import('../../auth');
 
     (github.parsePRInput as any).mockReturnValue(prDetails);
     (github.fetchPRDiff as any).mockResolvedValue(mockDiff);
     (llm.getLLMReviewStream as any).mockReturnValue(mockStream);
+    (auth as any).mockResolvedValue({ accessToken: 'test-token' });
 
     const result = await submitPRReview('valid');
     expect(result).toBe(mockStream);
-    expect(github.fetchPRDiff).toHaveBeenCalledWith('owner', 'repo', 123);
+    expect(github.fetchPRDiff).toHaveBeenCalledWith('owner', 'repo', 123, 'test-token');
     expect(llm.getLLMReviewStream).toHaveBeenCalledWith(mockDiff);
   });
 

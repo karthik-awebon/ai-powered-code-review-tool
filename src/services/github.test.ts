@@ -61,7 +61,28 @@ describe('fetchPRDiff', () => {
     expect(result).toBe(mockDiff);
     expect(fetch).toHaveBeenCalledWith(
       expect.stringContaining('/repos/owner/repo/pulls/123'),
-      expect.any(Object)
+      expect.objectContaining({
+        headers: expect.not.objectContaining({
+          Authorization: expect.any(String)
+        })
+      })
+    );
+  });
+
+  it('includes Authorization header when accessToken is provided', async () => {
+    (fetch as any).mockResolvedValue({
+      ok: true,
+      text: () => Promise.resolve('diff content'),
+    });
+
+    await fetchPRDiff('owner', 'repo', 123, 'test-token');
+    expect(fetch).toHaveBeenCalledWith(
+      expect.any(String),
+      expect.objectContaining({
+        headers: expect.objectContaining({
+          Authorization: 'Bearer test-token'
+        })
+      })
     );
   });
 
