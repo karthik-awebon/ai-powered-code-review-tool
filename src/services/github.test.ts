@@ -1,5 +1,5 @@
-import { describe, it, expect, vi } from 'vitest';
-import { parsePRInput } from './github';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { parsePRInput, fetchPRDiff } from './github';
 
 vi.mock('../utils/logger', () => ({
   logger: {
@@ -42,5 +42,36 @@ describe('parsePRInput', () => {
   it('trims whitespace', () => {
     expect(parsePRInput('  owner/repo#123  ')).toEqual({ owner: 'owner', repo: 'repo', pullNumber: 123 });
     expect(parsePRInput('  #123  ', 'owner/repo')).toEqual({ owner: 'owner', repo: 'repo', pullNumber: 123 });
+  });
+});
+
+describe('fetchPRDiff', () => {
+  beforeEach(() => {
+    vi.stubGlobal('fetch', vi.fn());
+  });
+
+  it('successfully fetches diff', async () => {
+    const mockDiff = 'diff content';
+    (fetch as any).mockResolvedValue({
+      ok: true,
+      text: () => Promise.resolve(mockDiff),
+    });
+
+    const result = await fetchPRDiff('owner', 'repo', 123);
+    expect(result).toBe(mockDiff);
+    expect(fetch).toHaveBeenCalledWith(
+      expect.stringContaining('/repos/owner/repo/pulls/123'),
+      expect.any(Object)
+    );
+  });
+
+  it('throws error when fetch fails', async () => {
+    (fetch as any).mockResolvedValue({
+      ok: false,
+      status: 404,
+      statusText: 'Not Found',
+    });
+
+    await expect(fetchPRDiff('owner', 'repo', 123)).rejects.toThrow('Failed to retrieve the pull request details. Please check the URL and your connection.');
   });
 });
