@@ -5,10 +5,24 @@ import styles from './ReviewComment.module.css';
 import { APP_CONFIG } from '../../constants';
 import { useReviewComment } from '../../hooks/useReviewComment';
 
+/**
+ * Props for the ReviewComment component.
+ */
 interface ReviewCommentProps {
+  /** The AI-generated review comment object containing findings and metadata. */
   comment: AiReviewComment;
 }
 
+/**
+ * ReviewComment component that displays an individual AI finding.
+ * 
+ * This component renders the comment content, severity level, confidence score,
+ * and relevant code snippets. It supports collapsing/expanding and copying the
+ * comment to the clipboard for use on GitHub.
+ * 
+ * @param props - The component props.
+ * @returns A collapsible card containing the review feedback.
+ */
 export function ReviewComment({ comment }: ReviewCommentProps) {
   const { LOW, MEDIUM } = APP_CONFIG.REVIEW.CONFIDENCE_THRESHOLDS;
   const { isCollapsed, toggleCollapse, confidencePercentage, copyToClipboard } = useReviewComment(comment);

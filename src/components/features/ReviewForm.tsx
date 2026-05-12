@@ -11,6 +11,15 @@ import { useRecentReviews } from '../../hooks/useRecentReviews';
 import { useReviewSubmission } from '../../hooks/useReviewSubmission';
 import { useReviewComments, SortOrder } from '../../hooks/useReviewComments';
 
+/**
+ * ReviewForm component that serves as the main entry point for the review process.
+ * 
+ * It manages the input for the GitHub Pull Request URL, handles the submission
+ * workflow, and coordinates the display of results, loading states, and error messages.
+ * It also provides filtering and sorting capabilities for the generated review comments.
+ * 
+ * @returns The complete review interface including input form and result display.
+ */
 export function ReviewForm() {
   const [url, setUrl] = useState('');
 

@@ -11,6 +11,22 @@ interface UseReviewSubmissionProps {
   onSuccess?: (details: { owner: string; repo: string; pullNumber: number; inputString: string }) => void;
 }
 
+/**
+ * Hook to manage the submission process of a pull request for AI review.
+ * Coordinates fetching PR data, streaming AI comments, and handling error/success states.
+ * 
+ * @param props - Configuration for the hook.
+ * @param props.defaultRepo - The default repository URL to use for shorthand inputs.
+ * @param props.onSuccess - Optional callback triggered when the review submission starts successfully.
+ * @returns An object containing:
+ * - `status`: Current stage of the submission ('idle', 'fetching', 'generating', 'done').
+ * - `error`: Error message if the submission failed, otherwise null.
+ * - `comments`: Accumulating array of AI review comments.
+ * - `submitReview`: Async function to initiate the review process for a given URL or shorthand.
+ * - `retry`: Function to re-attempt the last submission.
+ * - `clearError`: Function to reset the error state.
+ * - `isWorking`: Boolean indicating if a process is currently active.
+ */
 export function useReviewSubmission({ defaultRepo, onSuccess }: UseReviewSubmissionProps) {
   const [status, setStatus] = useState<SubmissionStatus>('idle');
   const [error, setError] = useState<string | null>(null);

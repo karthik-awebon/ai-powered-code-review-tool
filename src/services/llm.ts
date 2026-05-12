@@ -6,6 +6,15 @@ import { logger } from '../utils/logger';
 import { extractSnippetFromDiff } from '../utils/diff';
 import { APP_CONFIG, ERROR_MESSAGES } from '../constants';
 
+/**
+ * Initiates an AI-powered code review stream for the provided diff.
+ * Uses the Google Generative AI model to analyze the code changes and yield
+ * structured review comments.
+ * 
+ * @param diff - The git diff string to be analyzed.
+ * @yields An {@link AiReviewComment} object for each identified issue or suggestion.
+ * @throws Error if the LLM service is busy or if the request fails.
+ */
 export async function* getLLMReviewStream(diff: string): AsyncGenerator<AiReviewComment, void, unknown> {
   logger.info({ diffLength: diff.length }, 'Initiating LLM review stream');
 

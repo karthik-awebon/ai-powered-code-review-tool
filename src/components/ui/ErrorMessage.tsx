@@ -2,12 +2,27 @@
 
 import styles from './ErrorMessage.module.css';
 
+/**
+ * Props for the ErrorMessage component.
+ */
 interface ErrorMessageProps {
+  /** The error message to display to the user. */
   message: string;
+  /** Optional callback to trigger a retry of the failed operation. */
   onRetry?: () => void;
+  /** Callback to clear the error state and dismiss the message. */
   onClear: () => void;
 }
 
+/**
+ * ErrorMessage component for displaying feedback when an operation fails.
+ * 
+ * It provides a structured alert with the error details and actions to either
+ * retry the operation or dismiss the error.
+ * 
+ * @param props - The component props.
+ * @returns An alert box with error details and action buttons.
+ */
 export function ErrorMessage({ message, onRetry, onClear }: ErrorMessageProps) {
   return (
     <div className={styles.container} role="alert">

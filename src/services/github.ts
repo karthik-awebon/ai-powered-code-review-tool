@@ -2,6 +2,14 @@ import { logger } from '../utils/logger';
 import { APP_CONFIG, ERROR_MESSAGES } from '../constants';
 import { GitHubPRDetails } from '../types';
 
+/**
+ * Parses a pull request input string which can be a full URL, owner/repo#number,
+ * or just a number (if a default repository is provided).
+ * 
+ * @param input - The PR reference string (URL, owner/repo#123, or just 123).
+ * @param defaultRepo - Optional default owner/repo to use if only a number is provided.
+ * @returns An object containing owner, repo, and pullNumber, or null if parsing fails.
+ */
 export function parsePRInput(input: string, defaultRepo?: string): GitHubPRDetails | null {
   try {
     input = input.trim();
@@ -41,6 +49,15 @@ export function parsePRInput(input: string, defaultRepo?: string): GitHubPRDetai
   }
 }
 
+/**
+ * Fetches the diff of a pull request from GitHub.
+ * 
+ * @param owner - The owner of the repository.
+ * @param repo - The name of the repository.
+ * @param pullNumber - The pull request number.
+ * @returns A promise that resolves to the diff string.
+ * @throws Error if the fetch fails or the response is not OK.
+ */
 export async function fetchPRDiff(owner: string, repo: string, pullNumber: number): Promise<string> {
   const url = `${APP_CONFIG.GITHUB.BASE_URL}/repos/${owner}/${repo}/pulls/${pullNumber}`;
   

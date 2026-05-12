@@ -1,5 +1,14 @@
 import { APP_CONFIG } from '../constants';
 
+/**
+ * Extracts a specific snippet from a unified diff string, including surrounding context.
+ * 
+ * @param fullDiff - The complete git diff string.
+ * @param targetFile - The path of the file to extract the snippet from.
+ * @param targetLine - The line number in the new version of the file.
+ * @param contextLines - Number of lines of context to include before and after the target line.
+ * @returns The extracted diff snippet as a string, or undefined if the file or line is not found.
+ */
 export function extractSnippetFromDiff(
   fullDiff: string,
   targetFile: string,

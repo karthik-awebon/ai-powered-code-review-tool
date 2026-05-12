@@ -1,5 +1,13 @@
 import styles from './EmptyState.module.css';
 
+/**
+ * EmptyState component displayed when no review has been performed yet.
+ * 
+ * This component provides a call to action and explains the purpose of the tool
+ * to the user before they submit their first Pull Request for review.
+ * 
+ * @returns A visually centered state with instructions on how to use the tool.
+ */
 export function EmptyState() {
   return (
     <div className={styles.container}>

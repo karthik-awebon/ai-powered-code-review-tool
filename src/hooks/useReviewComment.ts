@@ -2,6 +2,17 @@ import { useState } from 'react';
 import { AiReviewComment } from '../types';
 import { APP_CONFIG } from '../constants';
 
+/**
+ * Hook to manage the state and actions for an individual AI review comment.
+ * Handles collapsing logic based on confidence and provides clipboard functionality.
+ * 
+ * @param comment - The AI review comment object to manage.
+ * @returns An object containing:
+ * - `isCollapsed`: Boolean indicating if the comment is currently collapsed.
+ * - `toggleCollapse`: Function to toggle the collapsed state.
+ * - `confidencePercentage`: The confidence score as a whole number percentage.
+ * - `copyToClipboard`: Function to copy the comment in markdown format to the clipboard.
+ */
 export function useReviewComment(comment: AiReviewComment) {
   const { LOW } = APP_CONFIG.REVIEW.CONFIDENCE_THRESHOLDS;
   

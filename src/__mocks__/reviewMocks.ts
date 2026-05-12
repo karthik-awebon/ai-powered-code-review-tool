@@ -1,5 +1,8 @@
 import { AiReviewComment, RecentReview } from '../types';
 
+/**
+ * A single mock AI-generated review comment.
+ */
 export const mockAiReviewComment: AiReviewComment = {
   id: '1',
   filePath: 'src/app/page.tsx',
@@ -10,6 +13,9 @@ export const mockAiReviewComment: AiReviewComment = {
   diffSnippet: '- const x = 1;\n+ const pageCount = 1;',
 };
 
+/**
+ * An array of mock AI-generated review comments with various severities and confidence levels.
+ */
 export const mockAiReviewComments: AiReviewComment[] = [
   mockAiReviewComment,
   {
@@ -30,6 +36,9 @@ export const mockAiReviewComments: AiReviewComment[] = [
   },
 ];
 
+/**
+ * Mock data representing a recently performed review.
+ */
 export const mockRecentReview: RecentReview = {
   id: 'owner/repo#123',
   owner: 'owner',
@@ -39,6 +48,9 @@ export const mockRecentReview: RecentReview = {
   timestamp: Date.now(),
 };
 
+/**
+ * An array of mock recent reviews for testing history or recent activity components.
+ */
 export const mockRecentReviews: RecentReview[] = [
   mockRecentReview,
   {

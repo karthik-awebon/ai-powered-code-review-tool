@@ -1,5 +1,14 @@
 import styles from './SkeletonComment.module.css';
 
+/**
+ * SkeletonComment component used as a loading placeholder.
+ * 
+ * It renders a pulsing skeleton screen that mimics the layout of the 
+ * ReviewComment component, providing visual feedback during data fetching
+ * or AI analysis.
+ * 
+ * @returns A pulsing placeholder UI.
+ */
 export function SkeletonComment() {
   return (
     <div className={styles.container}>

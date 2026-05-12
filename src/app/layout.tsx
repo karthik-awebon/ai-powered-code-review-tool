@@ -12,11 +12,18 @@ const geistMono = Geist_Mono({
   subsets: ['latin'],
 });
 
+/**
+ * Root metadata for the application.
+ */
 export const metadata: Metadata = {
   title: 'AI-Powered Code Review Tool',
   description: 'Intelligent code review assistant',
 };
 
+/**
+ * Root layout component that wraps all pages.
+ * Configures global fonts and metadata.
+ */
 export default function RootLayout({
   children,
 }: Readonly<{
