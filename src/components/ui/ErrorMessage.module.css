@@ -1,0 +1,90 @@
+.container {
+  padding: 16px;
+  background-color: #fff8f8;
+  border: 1px solid #ff8182;
+  border-radius: 6px;
+  margin-bottom: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+@media (prefers-color-scheme: dark) {
+  .container {
+    background-color: rgba(255, 129, 130, 0.05);
+    border-color: #cf222e;
+  }
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #cf222e;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+@media (prefers-color-scheme: dark) {
+  .header {
+    color: #ff7b72;
+  }
+}
+
+.message {
+  font-size: 14px;
+  color: #24292f;
+  line-height: 1.5;
+}
+
+@media (prefers-color-scheme: dark) {
+  .message {
+    color: #c9d1d9;
+  }
+}
+
+.actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 4px;
+}
+
+.button {
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.retryButton {
+  background-color: #cf222e;
+  color: #fff;
+  border: none;
+}
+
+.retryButton:hover {
+  background-color: #a40e26;
+}
+
+.clearButton {
+  background-color: transparent;
+  color: #57606a;
+  border: 1px solid #d0d7de;
+}
+
+.clearButton:hover {
+  background-color: #f3f4f6;
+}
+
+@media (prefers-color-scheme: dark) {
+  .clearButton {
+    color: #8b949e;
+    border-color: #30363d;
+  }
+  .clearButton:hover {
+    background-color: #21262d;
+    color: #c9d1d9;
+  }
+}

@@ -7,6 +7,7 @@ export const AiReviewCommentSchema = z.object({
   content: z.string(),
   confidence: z.number().min(0).max(1),
   severity: z.enum(['suggestion', 'warning', 'critical']),
+  diffSnippet: z.string().optional(),
 });
 
 export const PRReviewRequestSchema = z.object({

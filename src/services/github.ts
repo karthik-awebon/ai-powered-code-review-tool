@@ -1,4 +1,5 @@
 import { logger } from '../utils/logger';
+import { APP_CONFIG, ERROR_MESSAGES } from '../constants';
 
 export function parseGitHubPRUrl(url: string): { owner: string; repo: string; pullNumber: number } | null {
   try {
@@ -27,21 +28,20 @@ export function parseGitHubPRUrl(url: string): { owner: string; repo: string; pu
 }
 
 export async function fetchPRDiff(owner: string, repo: string, pullNumber: number): Promise<string> {
-  const url = `https://api.github.com/repos/${owner}/${repo}/pulls/${pullNumber}`;
+  const url = `${APP_CONFIG.GITHUB.BASE_URL}/repos/${owner}/${repo}/pulls/${pullNumber}`;
   
   logger.debug({ owner, repo, pullNumber }, 'Fetching diff from GitHub API');
   const response = await fetch(url, {
     headers: {
       Accept: 'application/vnd.github.v3.diff',
-      'X-GitHub-Api-Version': '2022-11-28'
+      'X-GitHub-Api-Version': APP_CONFIG.GITHUB.API_VERSION
     },
-    // We revalidate occasionally or cache based on use case.
-    next: { revalidate: 60 }
+    next: { revalidate: APP_CONFIG.GITHUB.REVALIDATE_SECONDS }
   });
 
   if (!response.ok) {
     logger.error({ status: response.status, statusText: response.statusText, owner, repo, pullNumber }, 'GitHub API error when fetching diff');
-    throw new Error(`Failed to fetch PR diff: ${response.statusText}`);
+    throw new Error(ERROR_MESSAGES.FETCH_FAILED);
   }
 
   const diff = await response.text();

@@ -1,5 +1,5 @@
 import { render, screen, fireEvent } from '@testing-library/react';
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { ReviewComment } from './ReviewComment';
 import { AiReviewComment } from '../../types';
 
@@ -61,5 +61,44 @@ describe('ReviewComment Component', () => {
     render(<ReviewComment comment={comment} />);
     
     expect(screen.getByText('critical')).toBeInTheDocument();
+  });
+
+  it('renders diff snippet if available', () => {
+    const comment: AiReviewComment = {
+      ...mockCommentBase,
+      id: '4',
+      confidence: 0.9,
+      severity: 'suggestion',
+      diffSnippet: '+ const a = 1;',
+    };
+
+    render(<ReviewComment comment={comment} />);
+    
+    expect(screen.getByText('+ const a = 1;')).toBeInTheDocument();
+  });
+
+  it('copies comment to clipboard when copy button is clicked', async () => {
+    const comment: AiReviewComment = {
+      ...mockCommentBase,
+      id: '5',
+      confidence: 0.9,
+      severity: 'suggestion',
+    };
+
+    const mockClipboard = {
+      writeText: vi.fn().mockResolvedValue(undefined),
+    };
+    Object.assign(navigator, {
+      clipboard: mockClipboard,
+    });
+
+    render(<ReviewComment comment={comment} />);
+    
+    const copyButton = screen.getByLabelText('Copy for GitHub');
+    fireEvent.click(copyButton);
+
+    expect(mockClipboard.writeText).toHaveBeenCalledWith(
+      '**AI Review (Severity: suggestion, Confidence: 90%)**\nThis is a test comment.'
+    );
   });
 });
