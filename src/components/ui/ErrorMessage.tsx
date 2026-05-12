@@ -8,6 +8,8 @@ import styles from './ErrorMessage.module.css';
 interface ErrorMessageProps {
   /** The error message to display to the user. */
   message: string;
+  /** Optional hint providing actionable advice to the user. */
+  actionableHint?: string;
   /** Optional callback to trigger a retry of the failed operation. */
   onRetry?: () => void;
   /** Callback to clear the error state and dismiss the message. */
@@ -23,7 +25,7 @@ interface ErrorMessageProps {
  * @param props - The component props.
  * @returns An alert box with error details and action buttons.
  */
-export function ErrorMessage({ message, onRetry, onClear }: ErrorMessageProps) {
+export function ErrorMessage({ message, actionableHint, onRetry, onClear }: ErrorMessageProps) {
   return (
     <div className={styles.container} role="alert">
       <div className={styles.header}>
@@ -35,6 +37,11 @@ export function ErrorMessage({ message, onRetry, onClear }: ErrorMessageProps) {
       <div className={styles.message}>
         {message}
       </div>
+      {actionableHint && (
+        <div className={styles.hint}>
+          {actionableHint}
+        </div>
+      )}
       <div className={styles.actions}>
         {onRetry && (
           <button className={`${styles.button} ${styles.retryButton}`} onClick={onRetry}>

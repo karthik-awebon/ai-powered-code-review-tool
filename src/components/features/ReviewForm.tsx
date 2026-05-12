@@ -10,6 +10,7 @@ import { useDefaultRepo } from '../../hooks/useDefaultRepo';
 import { useRecentReviews } from '../../hooks/useRecentReviews';
 import { useReviewSubmission } from '../../hooks/useReviewSubmission';
 import { useReviewComments, SortOrder } from '../../hooks/useReviewComments';
+import styles from './ReviewForm.module.css';
 
 /**
  * ReviewForm component that serves as the main entry point for the review process.
@@ -72,50 +73,38 @@ export function ReviewForm() {
   }
 
   return (
-    <div style={{ maxWidth: '800px', margin: '0 auto', width: '100%' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-        <label style={{ fontSize: '14px', fontWeight: 600 }}>Pull Request to Review</label>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px' }}>
-          <span style={{ color: 'var(--foreground)' }}>Default Repo:</span>
+    <div className={styles.container}>
+      <div className={styles.header}>
+        <label className={styles.headerLabel}>Pull Request to Review</label>
+        <div className={styles.defaultRepo}>
+          <span>Default Repo:</span>
           <input 
             type="text" 
             placeholder="owner/repo" 
             value={defaultRepo}
             onChange={(e) => saveDefaultRepo(e.target.value)}
-            style={{ 
-              padding: '4px 8px', 
-              borderRadius: '4px', 
-              border: '1px solid #d0d7de',
-              width: '120px'
-            }}
+            className={styles.defaultRepoInput}
           />
         </div>
       </div>
 
-      <form onSubmit={handleSubmit} style={{ display: 'flex', gap: '8px', marginBottom: '8px' }}>
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+      <form onSubmit={handleSubmit} className={styles.form}>
+        <div className={styles.inputWrapper}>
           <input
             type="text"
             value={url}
             onChange={(e) => setUrl(e.target.value)}
             placeholder="e.g. owner/repo#123 or https://github.com/..."
             required
-            style={{
-              padding: '10px 14px',
-              borderRadius: '6px',
-              border: '1px solid #d0d7de',
-              fontSize: '16px',
-              backgroundColor: 'var(--background)',
-              color: 'var(--foreground)'
-            }}
+            className={styles.prInput}
           />
           {url && parsedInput && (
-            <span style={{ fontSize: '12px', color: '#2ea043', marginTop: '4px', marginLeft: '4px' }}>
+            <span className={styles.validationSuccess}>
               ✓ Recognized: {parsedInput.owner}/{parsedInput.repo} #{parsedInput.pullNumber}
             </span>
           )}
           {url && !parsedInput && (
-            <span style={{ fontSize: '12px', color: '#cf222e', marginTop: '4px', marginLeft: '4px' }}>
+            <span className={styles.validationError}>
               ✗ Unrecognized format
             </span>
           )}
@@ -125,18 +114,7 @@ export function ReviewForm() {
           type="button"
           onClick={handleExamplePR}
           disabled={isWorking}
-          style={{
-            padding: '10px 16px',
-            borderRadius: '6px',
-            border: '1px solid #d0d7de',
-            backgroundColor: 'transparent',
-            color: 'var(--foreground)',
-            fontSize: '14px',
-            fontWeight: 500,
-            cursor: isWorking ? 'not-allowed' : 'pointer',
-            opacity: isWorking ? 0.7 : 1,
-            height: 'fit-content'
-          }}
+          className={styles.exampleButton}
         >
           Example PR
         </button>
@@ -144,42 +122,23 @@ export function ReviewForm() {
         <button
           type="submit"
           disabled={isWorking || (!!url && !parsedInput)}
-          style={{
-            padding: '10px 20px',
-            borderRadius: '6px',
-            border: 'none',
-            backgroundColor: '#2ea043',
-            color: '#fff',
-            fontSize: '16px',
-            fontWeight: 600,
-            cursor: (isWorking || (!!url && !parsedInput)) ? 'not-allowed' : 'pointer',
-            opacity: (isWorking || (!!url && !parsedInput)) ? 0.7 : 1,
-            height: 'fit-content'
-          }}
+          className={styles.submitButton}
         >
           {buttonText}
         </button>
       </form>
 
       {recentReviews.length > 0 && (
-        <div style={{ marginBottom: '24px', fontSize: '13px' }}>
-          <span style={{ color: '#57606a', marginRight: '8px' }}>Recent:</span>
-          <div style={{ display: 'inline-flex', gap: '8px', flexWrap: 'wrap' }}>
+        <div className={styles.recentContainer}>
+          <span className={styles.recentLabel}>Recent:</span>
+          <div className={styles.recentList}>
             {recentReviews.map(review => (
               <button
                 key={review.id}
                 type="button"
                 onClick={() => { setUrl(review.inputString); submitReview(review.inputString); }}
                 disabled={isWorking}
-                style={{
-                  padding: '2px 8px',
-                  borderRadius: '12px',
-                  border: '1px solid #d0d7de',
-                  background: 'var(--background)',
-                  cursor: isWorking ? 'not-allowed' : 'pointer',
-                  fontSize: '12px',
-                  color: 'var(--foreground)'
-                }}
+                className={styles.recentPill}
               >
                 {review.owner}/{review.repo}#{review.pullNumber}
               </button>
@@ -189,19 +148,20 @@ export function ReviewForm() {
       )}
 
       {/* Spacing if no recent reviews */}
-      {recentReviews.length === 0 && <div style={{ marginBottom: '24px' }}></div>}
+      {recentReviews.length === 0 && <div className={styles.spacer}></div>}
 
       {error && (
         <ErrorMessage 
-          message={error} 
+          message={error.message} 
+          actionableHint={error.actionableHint}
           onRetry={retry} 
           onClear={clearError} 
         />
       )}
 
       {hasComments && (
-        <div style={{ display: 'flex', gap: '16px', marginBottom: '24px', alignItems: 'center', flexWrap: 'wrap', padding: '12px', backgroundColor: 'var(--background)', border: '1px solid #d0d7de', borderRadius: '6px' }}>
-          <label style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }}>
+        <div className={styles.filtersContainer}>
+          <label className={styles.checkboxLabel}>
             <input 
               type="checkbox" 
               checked={showOnlyCritical} 
@@ -209,13 +169,13 @@ export function ReviewForm() {
             />
             Show Critical Only
           </label>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <div className={styles.sortContainer}>
             <label htmlFor="sortConf">Sort by Confidence:</label>
             <select 
               id="sortConf"
               value={sortByConfidence} 
               onChange={(e) => setSortByConfidence(e.target.value as SortOrder)}
-              style={{ padding: '4px 8px', borderRadius: '4px', border: '1px solid #d0d7de' }}
+              className={styles.sortSelect}
             >
               <option value="none">None</option>
               <option value="desc">High to Low</option>
@@ -237,15 +197,8 @@ export function ReviewForm() {
         )}
 
         {Object.entries(groupedComments).map(([filePath, fileComments]) => (
-          <div key={filePath} style={{ marginBottom: '32px' }}>
-            <h3 style={{ 
-              marginBottom: '16px', 
-              paddingBottom: '8px', 
-              borderBottom: '1px solid #d0d7de',
-              fontSize: '18px',
-              fontFamily: 'monospace',
-              wordBreak: 'break-all'
-            }}>
+          <div key={filePath} className={styles.fileGroup}>
+            <h3 className={styles.fileHeader}>
               {filePath}
             </h3>
             {fileComments.map((comment) => (

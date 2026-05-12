@@ -43,6 +43,19 @@
   }
 }
 
+.hint {
+  font-size: 13px;
+  color: #57606a;
+  margin-top: -4px;
+  font-style: italic;
+}
+
+@media (prefers-color-scheme: dark) {
+  .hint {
+    color: #8b949e;
+  }
+}
+
 .actions {
   display: flex;
   gap: 12px;

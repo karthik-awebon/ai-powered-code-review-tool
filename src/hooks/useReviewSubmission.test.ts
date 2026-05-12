@@ -37,7 +37,7 @@ describe('useReviewSubmission', () => {
       await result.current.submitReview('invalid');
     });
 
-    expect(result.current.error).toContain('Invalid PR input');
+    expect(result.current.error?.message).toContain('Invalid PR input');
     expect(result.current.status).toBe('idle');
   });
 
@@ -77,7 +77,7 @@ describe('useReviewSubmission', () => {
       await result.current.submitReview('valid-url');
     });
 
-    expect(result.current.error).toBe('Server error');
+    expect(result.current.error?.message).toBe('Server error');
     expect(result.current.status).toBe('idle');
   });
 
@@ -91,7 +91,7 @@ describe('useReviewSubmission', () => {
       await result.current.submitReview('valid-url');
     });
 
-    expect(result.current.error).toBe('Network failure');
+    expect(result.current.error?.message).toBe('Network failure');
     expect(result.current.status).toBe('idle');
   });
 
@@ -106,10 +106,12 @@ describe('useReviewSubmission', () => {
       await result.current.submitReview('valid-url');
     });
 
-    expect(result.current.error).toBe('First fail');
+    expect(result.current.error?.message).toBe('First fail');
 
     await act(async () => {
-      await result.current.retry();
+      if (result.current.retry) {
+        await result.current.retry();
+      }
     });
 
     expect(submitPRReview).toHaveBeenCalledTimes(2);

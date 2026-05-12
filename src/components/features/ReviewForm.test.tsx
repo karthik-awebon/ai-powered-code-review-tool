@@ -121,7 +121,7 @@ describe('ReviewForm Component', () => {
   it('shows error message from submission', () => {
     (useReviewSubmission as any).mockReturnValue({
       status: 'idle',
-      error: 'Something went wrong',
+      error: { message: 'Something went wrong', isRetriable: true },
       comments: [],
       submitReview: vi.fn(),
       isWorking: false,

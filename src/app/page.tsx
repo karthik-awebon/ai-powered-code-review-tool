@@ -1,3 +1,4 @@
+import styles from './page.module.css';
 import { ReviewForm } from '../components/features/ReviewForm';
 
 /**
@@ -6,15 +7,18 @@ import { ReviewForm } from '../components/features/ReviewForm';
  */
 export default function Home() {
   return (
-    <main style={{ minHeight: '100vh', padding: '64px 24px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-      <h1 style={{ fontSize: '36px', fontWeight: 'bold', marginBottom: '16px' }}>
-        AI-Powered Code Review Tool
-      </h1>
-      <p style={{ fontSize: '18px', color: '#57606a', marginBottom: '48px' }}>
-        Enter a GitHub Pull Request URL to receive a contextual LLM review.
-      </p>
-      
-      <ReviewForm />
+    <main className={styles.page}>
+      <div className={styles.main}>
+        <div className={styles.intro}>
+          <h1>
+            AI-Powered Code Review Tool
+          </h1>
+          <p>
+            Enter a GitHub Pull Request URL to receive a contextual LLM review.
+          </p>
+        </div>
+        <ReviewForm />
+      </div>
     </main>
   );
 }

@@ -6,6 +6,12 @@ import { ERROR_MESSAGES } from '../constants';
 
 export type SubmissionStatus = 'idle' | 'fetching' | 'generating' | 'done';
 
+interface ErrorState {
+  message: string;
+  actionableHint?: string;
+  isRetriable: boolean;
+}
+
 interface UseReviewSubmissionProps {
   defaultRepo: string;
   onSuccess?: (details: { owner: string; repo: string; pullNumber: number; inputString: string }) => void;
@@ -20,25 +26,63 @@ interface UseReviewSubmissionProps {
  * @param props.onSuccess - Optional callback triggered when the review submission starts successfully.
  * @returns An object containing:
  * - `status`: Current stage of the submission ('idle', 'fetching', 'generating', 'done').
- * - `error`: Error message if the submission failed, otherwise null.
+ * - `error`: Error state if the submission failed, otherwise null.
  * - `comments`: Accumulating array of AI review comments.
  * - `submitReview`: Async function to initiate the review process for a given URL or shorthand.
- * - `retry`: Function to re-attempt the last submission.
+ * - `retry`: Function to re-attempt the last submission (if retriable).
  * - `clearError`: Function to reset the error state.
  * - `isWorking`: Boolean indicating if a process is currently active.
  */
 export function useReviewSubmission({ defaultRepo, onSuccess }: UseReviewSubmissionProps) {
   const [status, setStatus] = useState<SubmissionStatus>('idle');
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<ErrorState | null>(null);
   const [comments, setComments] = useState<AiReviewComment[]>([]);
   const [lastSubmittedUrl, setLastSubmittedUrl] = useState('');
+
+  const categorizeError = (errorMessage: string): ErrorState => {
+    const lowerMsg = errorMessage.toLowerCase();
+    
+    if (lowerMsg.includes('rate limit')) {
+      return {
+        message: errorMessage,
+        actionableHint: 'GitHub API rate limit exceeded. Please wait a few minutes and try again.',
+        isRetriable: true
+      };
+    }
+    
+    if (lowerMsg.includes('not found') || lowerMsg.includes('404')) {
+      return {
+        message: errorMessage,
+        actionableHint: 'The Pull Request or Repository was not found. Please check the URL and ensure the repository is public.',
+        isRetriable: false
+      };
+    }
+    
+    if (lowerMsg.includes('high demand') || lowerMsg.includes('try again later')) {
+      return {
+        message: errorMessage,
+        actionableHint: 'The AI service is currently experiencing high demand. Please try again in a few moments.',
+        isRetriable: true
+      };
+    }
+    
+    // Default fallback
+    return {
+      message: errorMessage,
+      isRetriable: true
+    };
+  };
 
   const submitReview = async (url: string) => {
     if (!url) return;
 
     const prDetails = parsePRInput(url, defaultRepo);
     if (!prDetails) {
-      setError('Invalid PR input. Please provide a valid GitHub URL, shorthand (owner/repo#123), or configure a default repository and use #123.');
+      setError({
+        message: 'Invalid PR input.',
+        actionableHint: 'Please provide a valid GitHub URL, shorthand (owner/repo#123), or configure a default repository and use #123.',
+        isRetriable: false
+      });
       return;
     }
 
@@ -51,7 +95,7 @@ export function useReviewSubmission({ defaultRepo, onSuccess }: UseReviewSubmiss
       const result = await submitPRReview(url, defaultRepo);
       
       if ('error' in result) {
-        setError(result.error || ERROR_MESSAGES.UNKNOWN);
+        setError(categorizeError(result.error || ERROR_MESSAGES.UNKNOWN));
         setStatus('idle');
         return;
       }
@@ -68,13 +112,13 @@ export function useReviewSubmission({ defaultRepo, onSuccess }: UseReviewSubmiss
       setStatus('done');
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : ERROR_MESSAGES.UNKNOWN;
-      setError(errorMessage);
+      setError(categorizeError(errorMessage));
       setStatus('idle');
     }
   };
 
   const retry = () => {
-    if (lastSubmittedUrl) {
+    if (lastSubmittedUrl && error?.isRetriable) {
       submitReview(lastSubmittedUrl);
     }
   };
@@ -86,7 +130,7 @@ export function useReviewSubmission({ defaultRepo, onSuccess }: UseReviewSubmiss
     error,
     comments,
     submitReview,
-    retry,
+    retry: error?.isRetriable ? retry : undefined,
     clearError,
     isWorking: status === 'fetching' || status === 'generating'
   };
