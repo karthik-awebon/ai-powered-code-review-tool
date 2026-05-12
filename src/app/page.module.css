@@ -1,6 +1,6 @@
 .page {
-  --background: #fafafa;
-  --foreground: #fff;
+  --page-bg: #fafafa;
+  --content-bg: #fff;
 
   --text-primary: #000;
   --text-secondary: #666;
@@ -15,7 +15,7 @@
   align-items: center;
   justify-content: center;
   font-family: var(--font-geist-sans);
-  background-color: var(--background);
+  background-color: var(--page-bg);
 }
 
 .main {
@@ -26,7 +26,7 @@
   flex-direction: column;
   align-items: flex-start;
   justify-content: space-between;
-  background-color: var(--foreground);
+  background-color: var(--content-bg);
   padding: 120px 60px;
 }
 
@@ -86,7 +86,7 @@
 
 a.primary {
   background: var(--text-primary);
-  color: var(--background);
+  color: var(--page-bg);
   gap: 8px;
 }
 
@@ -129,8 +129,8 @@ a.secondary {
   }
 
   .page {
-    --background: #000;
-    --foreground: #000;
+    --page-bg: #000;
+    --content-bg: #0a0a0a;
 
     --text-primary: #ededed;
     --text-secondary: #999;
