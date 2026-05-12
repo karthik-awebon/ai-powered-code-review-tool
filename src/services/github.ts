@@ -1,28 +1,40 @@
 import { logger } from '../utils/logger';
 import { APP_CONFIG, ERROR_MESSAGES } from '../constants';
 
-export function parseGitHubPRUrl(url: string): { owner: string; repo: string; pullNumber: number } | null {
+export function parsePRInput(input: string, defaultRepo?: string): { owner: string; repo: string; pullNumber: number } | null {
   try {
-    const parsed = new URL(url);
-    if (parsed.hostname !== 'github.com') {
-      logger.debug({ hostname: parsed.hostname }, 'Non-GitHub hostname provided');
+    input = input.trim();
+    if (!input) return null;
+
+    // Handle full URL
+    if (input.startsWith('http://') || input.startsWith('https://')) {
+      const parsed = new URL(input);
+      if (parsed.hostname !== 'github.com') return null;
+      const parts = parsed.pathname.split('/').filter(Boolean);
+      if (parts.length >= 4 && parts[2] === 'pull') {
+        return { owner: parts[0], repo: parts[1], pullNumber: parseInt(parts[3], 10) };
+      }
       return null;
     }
 
-    const parts = parsed.pathname.split('/').filter(Boolean);
-    if (parts.length >= 4 && parts[2] === 'pull') {
-      const details = {
-        owner: parts[0],
-        repo: parts[1],
-        pullNumber: parseInt(parts[3], 10),
-      };
-      logger.debug(details, 'Successfully parsed GitHub PR URL');
-      return details;
+    // Handle owner/repo#123 or owner/repo/pull/123
+    let match = input.match(/^([^/]+)\/([^/#]+)(?:#|\/pull\/)(\d+)$/);
+    if (match) {
+      return { owner: match[1], repo: match[2], pullNumber: parseInt(match[3], 10) };
     }
-    logger.debug({ path: parsed.pathname }, 'URL path does not match GitHub PR pattern');
+
+    // Handle just the PR number if defaultRepo is provided
+    match = input.match(/^(?:#)?(\d+)$/);
+    if (match && defaultRepo) {
+      const repoParts = defaultRepo.split('/');
+      if (repoParts.length === 2) {
+        return { owner: repoParts[0], repo: repoParts[1], pullNumber: parseInt(match[1], 10) };
+      }
+    }
+
     return null;
   } catch (error: any) {
-    logger.debug({ url, error: error.message }, 'Failed to parse URL');
+    logger.debug({ input, error: error.message }, 'Failed to parse PR input');
     return null;
   }
 }

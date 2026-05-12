@@ -1,17 +1,17 @@
 'use server';
 
-import { parseGitHubPRUrl, fetchPRDiff } from '../../services/github';
+import { parsePRInput, fetchPRDiff } from '../../services/github';
 import { getLLMReviewStream } from '../../services/llm';
 import { AiReviewComment } from '../../types';
 import { logger } from '../../utils/logger';
 
-export async function submitPRReview(url: string): Promise<AsyncIterable<AiReviewComment> | { error: string }> {
-  logger.info({ url }, 'Starting PR review submission');
+export async function submitPRReview(input: string, defaultRepo?: string): Promise<AsyncIterable<AiReviewComment> | { error: string }> {
+  logger.info({ input, defaultRepo }, 'Starting PR review submission');
 
-  const prDetails = parseGitHubPRUrl(url);
+  const prDetails = parsePRInput(input, defaultRepo);
   if (!prDetails) {
-    logger.warn({ url }, 'Invalid GitHub PR URL provided');
-    return { error: 'Invalid GitHub PR URL' };
+    logger.warn({ input, defaultRepo }, 'Invalid PR input provided');
+    return { error: 'Invalid GitHub PR input format' };
   }
 
   try {
@@ -21,7 +21,7 @@ export async function submitPRReview(url: string): Promise<AsyncIterable<AiRevie
     logger.info({ diff }, 'PR diff fetched successfully, starting LLM review stream');
     return getLLMReviewStream(diff);
   } catch (error: any) {
-    logger.error({ error: error.message, url }, 'Failed to complete PR review');
+    logger.error({ error: error.message, input }, 'Failed to complete PR review');
     return { error: error.message || 'Failed to fetch PR diff' };
   }
 }
