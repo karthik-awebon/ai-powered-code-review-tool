@@ -19,6 +19,7 @@ export function ReviewForm() {
     e.preventDefault();
     if (!url) return;
 
+    console.log('[ReviewForm] Submitting URL:', url);
     setStatus('fetching');
     setError(null);
     setComments([]);
@@ -27,19 +28,24 @@ export function ReviewForm() {
       const result = await submitPRReview(url);
       
       if ('error' in result) {
+        console.error('[ReviewForm] Error from server action:', result.error);
         setError(result.error);
         setStatus('idle');
         return;
       }
 
+      console.log('[ReviewForm] Diff fetched, starting to process stream...');
       setStatus('generating');
       // result is AsyncIterable<AiReviewComment>
       // We iterate over the stream
       for await (const comment of result) {
+        console.log('[ReviewForm] Received comment:', comment.id);
         setComments((prev) => [...prev, comment]);
       }
+      console.log('[ReviewForm] Stream iteration complete');
       setStatus('done');
     } catch (err: any) {
+      console.error('[ReviewForm] Unexpected error during submission:', err);
       setError(err.message || 'An unexpected error occurred.');
       setStatus('idle');
     }
