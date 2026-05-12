@@ -1,13 +1,5 @@
 import { useState, useEffect } from 'react';
-
-export interface RecentReview {
-  id: string; // e.g. "owner/repo#123"
-  owner: string;
-  repo: string;
-  pullNumber: number;
-  inputString: string;
-  timestamp: number;
-}
+import { RecentReview } from '../types';
 
 const STORAGE_KEY = 'ai_pr_recent_reviews';
 const MAX_RECENT = 5;

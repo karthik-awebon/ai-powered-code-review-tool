@@ -30,20 +30,24 @@ export async function* getLLMReviewStream(diff: string): AsyncGenerator<AiReview
     }
 
     logger.info({ totalComments: commentCount }, 'LLM review stream completed');
-  } catch (error: any) {
+  } catch (error) {
+    const isError = error instanceof Error;
+    const errorMessage = isError ? error.message : 'Unknown LLM error';
+    const errorName = isError ? error.name : 'UnknownError';
+    const statusCode = (error as any)?.statusCode; // Still using cast here as statusCode is not on Error
+
     logger.error({ 
-      error: error.message, 
-      name: error.name,
-      statusCode: error.statusCode,
-      stack: error.stack 
+      error: errorMessage, 
+      name: errorName,
+      statusCode,
     }, 'LLM review stream encountered an error');
 
     // Handle high demand (503) or specific retry errors
     if (
-      error.statusCode === 503 || 
-      error.message?.toLowerCase().includes('high demand') || 
-      error.message?.toLowerCase().includes('try again later') ||
-      error.name === 'AI_RetryError'
+      statusCode === 503 || 
+      errorMessage.toLowerCase().includes('high demand') || 
+      errorMessage.toLowerCase().includes('try again later') ||
+      errorName === 'AI_RetryError'
     ) {
       throw new Error(ERROR_MESSAGES.LLM_BUSY);
     }

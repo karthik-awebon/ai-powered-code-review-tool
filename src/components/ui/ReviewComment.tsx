@@ -1,10 +1,9 @@
 'use client';
 
-import { useState } from 'react';
 import { AiReviewComment } from '../../types';
 import styles from './ReviewComment.module.css';
-
 import { APP_CONFIG } from '../../constants';
+import { useReviewComment } from '../../hooks/useReviewComment';
 
 interface ReviewCommentProps {
   comment: AiReviewComment;
@@ -12,9 +11,7 @@ interface ReviewCommentProps {
 
 export function ReviewComment({ comment }: ReviewCommentProps) {
   const { LOW, MEDIUM } = APP_CONFIG.REVIEW.CONFIDENCE_THRESHOLDS;
-  
-  // Low confidence is collapsed by default
-  const [isCollapsed, setIsCollapsed] = useState(comment.confidence < LOW);
+  const { isCollapsed, toggleCollapse, confidencePercentage, copyToClipboard } = useReviewComment(comment);
 
   let confidenceClass = styles.highConfidence;
   if (comment.confidence < LOW) confidenceClass = styles.lowConfidence;
@@ -23,21 +20,6 @@ export function ReviewComment({ comment }: ReviewCommentProps) {
   let badgeClass = styles.badgeSuggestion;
   if (comment.severity === 'critical') badgeClass = styles.badgeCritical;
   else if (comment.severity === 'warning') badgeClass = styles.badgeWarning;
-
-  const toggleCollapse = () => setIsCollapsed((prev) => !prev);
-
-  const confidencePercentage = Math.round(comment.confidence * 100);
-
-  const handleCopy = async (e: React.MouseEvent) => {
-    e.stopPropagation();
-    const markdown = `**AI Review (Severity: ${comment.severity}, Confidence: ${confidencePercentage}%)**\n${comment.content}`;
-    try {
-      await navigator.clipboard.writeText(markdown);
-      // Optional: Add a temporary toast or success state here
-    } catch (err) {
-      console.error('Failed to copy to clipboard', err);
-    }
-  };
 
   return (
     <div className={`${styles.container} ${confidenceClass} ${isCollapsed ? styles.collapsed : ''}`}>
@@ -52,7 +34,7 @@ export function ReviewComment({ comment }: ReviewCommentProps) {
           <span className={styles.badge} title="AI Confidence Score">
             {confidencePercentage}% confident
           </span>
-          <button className={styles.copyButton} onClick={handleCopy} aria-label="Copy for GitHub">
+          <button className={styles.copyButton} onClick={copyToClipboard} aria-label="Copy for GitHub">
             Copy
           </button>
           <span>{isCollapsed ? '▼' : '▲'}</span>

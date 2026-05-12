@@ -1,7 +1,8 @@
 import { logger } from '../utils/logger';
 import { APP_CONFIG, ERROR_MESSAGES } from '../constants';
+import { GitHubPRDetails } from '../types';
 
-export function parsePRInput(input: string, defaultRepo?: string): { owner: string; repo: string; pullNumber: number } | null {
+export function parsePRInput(input: string, defaultRepo?: string): GitHubPRDetails | null {
   try {
     input = input.trim();
     if (!input) return null;
@@ -33,8 +34,9 @@ export function parsePRInput(input: string, defaultRepo?: string): { owner: stri
     }
 
     return null;
-  } catch (error: any) {
-    logger.debug({ input, error: error.message }, 'Failed to parse PR input');
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    logger.debug({ input, error: errorMessage }, 'Failed to parse PR input');
     return null;
   }
 }

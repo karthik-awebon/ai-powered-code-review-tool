@@ -20,8 +20,9 @@ export async function submitPRReview(input: string, defaultRepo?: string): Promi
 
     logger.info({ diff }, 'PR diff fetched successfully, starting LLM review stream');
     return getLLMReviewStream(diff);
-  } catch (error: any) {
-    logger.error({ error: error.message, input }, 'Failed to complete PR review');
-    return { error: error.message || 'Failed to fetch PR diff' };
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : 'Failed to fetch PR diff';
+    logger.error({ error: errorMessage, input }, 'Failed to complete PR review');
+    return { error: errorMessage };
   }
 }
