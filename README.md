@@ -43,6 +43,8 @@ An intelligent code review assistant powered by Next.js and AI.
 - `npm run test`: Run tests in watch mode
 - `npm run test:run`: Run tests once
 - `npm run test:ui`: Run tests with UI
+- `npm run cypress:open`: Open Cypress Test Runner
+- `npm run cypress:run`: Run Cypress tests headlessly (requires app running)
 
 ## Architecture
 
