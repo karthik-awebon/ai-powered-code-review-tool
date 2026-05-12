@@ -1,10 +1,16 @@
+import { ReviewForm } from '../components/features/ReviewForm';
+
 export default function Home() {
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center p-24">
-      <h1 className="text-4xl font-bold">AI-Powered Code Review Tool</h1>
-      <p className="mt-4 text-xl text-gray-600">
-        Welcome to your intelligent code review assistant.
+    <main style={{ minHeight: '100vh', padding: '64px 24px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+      <h1 style={{ fontSize: '36px', fontWeight: 'bold', marginBottom: '16px' }}>
+        AI-Powered Code Review Tool
+      </h1>
+      <p style={{ fontSize: '18px', color: '#57606a', marginBottom: '48px' }}>
+        Enter a GitHub Pull Request URL to receive a contextual LLM review.
       </p>
+      
+      <ReviewForm />
     </main>
   );
 }
