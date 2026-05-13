@@ -30,7 +30,7 @@ export async function submitPRReview(input: string, defaultRepo?: string): Promi
     logger.info({ ...prDetails, authenticated: !!accessToken }, 'Fetching PR diff');
     const diff = await fetchPRDiff(prDetails.owner, prDetails.repo, prDetails.pullNumber, accessToken);
 
-    logger.info({ diff }, 'PR diff fetched successfully, starting LLM review stream');
+    logger.info('PR diff fetched successfully, starting LLM review stream');
     return getLLMReviewStream(diff);
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : 'Failed to fetch PR diff';

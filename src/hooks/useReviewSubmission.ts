@@ -42,10 +42,20 @@ export function useReviewSubmission({ defaultRepo, onSuccess }: UseReviewSubmiss
   const categorizeError = (errorMessage: string): ErrorState => {
     const lowerMsg = errorMessage.toLowerCase();
     
-    if (lowerMsg.includes('rate limit')) {
+    // AI Service Rate Limit or High Demand (our internal ERROR_MESSAGES.LLM_BUSY)
+    if (lowerMsg.includes('high demand') || lowerMsg.includes('try again later')) {
       return {
         message: errorMessage,
-        actionableHint: 'GitHub API rate limit exceeded. Please wait a few minutes and try again.',
+        actionableHint: 'The AI service is currently experiencing high demand. Please try again in a few moments.',
+        isRetriable: true
+      };
+    }
+
+    // GitHub or general Rate Limit
+    if (lowerMsg.includes('rate limit') || lowerMsg.includes('too many requests')) {
+      return {
+        message: errorMessage,
+        actionableHint: 'Rate limit exceeded. Please wait a few minutes and try again.',
         isRetriable: true
       };
     }
@@ -55,14 +65,6 @@ export function useReviewSubmission({ defaultRepo, onSuccess }: UseReviewSubmiss
         message: errorMessage,
         actionableHint: 'The Pull Request or Repository was not found. Please check the URL and ensure the repository is public.',
         isRetriable: false
-      };
-    }
-    
-    if (lowerMsg.includes('high demand') || lowerMsg.includes('try again later')) {
-      return {
-        message: errorMessage,
-        actionableHint: 'The AI service is currently experiencing high demand. Please try again in a few moments.',
-        isRetriable: true
       };
     }
     

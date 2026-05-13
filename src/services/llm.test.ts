@@ -28,7 +28,7 @@ describe('getLLMReviewStream', () => {
     vi.clearAllMocks();
   });
 
-  it('yields comments from the stream correctly', async () => {
+  it('yields comments from the stream correctly using elementStream', async () => {
     const mockElementStream = (async function* () {
       for (const comment of mockAiReviewComments) {
         yield comment;
@@ -51,9 +51,40 @@ describe('getLLMReviewStream', () => {
     expect(results[0].diffSnippet).toBe(`snippet-${mockAiReviewComments[0].filePath}-${mockAiReviewComments[0].lineNumber}`);
   });
 
-  it('throws ERROR_MESSAGES.LLM_BUSY when 503 error occurs', async () => {
+  it('throws when an error occurs in elementStream', async () => {
+    const mockElementStream = (async function* () {
+      yield mockAiReviewComments[0];
+      throw { status: 429, message: 'Rate limit exceeded' };
+    })();
+
+    (streamObject as any).mockReturnValue({
+      elementStream: mockElementStream,
+    });
+
+    const diff = 'some diff';
+    const generator = getLLMReviewStream(diff);
+
+    await expect(async () => {
+      for await (const _ of generator) {}
+    }).rejects.toThrow('The AI service is currently experiencing high demand. Please try again in a moment.');
+  });
+
+  it('throws ERROR_MESSAGES.LLM_BUSY when 503 error occurs during initialization', async () => {
     (streamObject as any).mockImplementation(() => {
       throw { statusCode: 503, message: 'Service Unavailable' };
+    });
+
+    const diff = 'some diff';
+    const generator = getLLMReviewStream(diff);
+
+    await expect(async () => {
+      for await (const _ of generator) {}
+    }).rejects.toThrow('The AI service is currently experiencing high demand. Please try again in a moment.');
+  });
+
+  it('throws ERROR_MESSAGES.LLM_BUSY when 429 error occurs during initialization', async () => {
+    (streamObject as any).mockImplementation(() => {
+      throw { status: 429, message: 'Too Many Requests' };
     });
 
     const diff = 'some diff';
