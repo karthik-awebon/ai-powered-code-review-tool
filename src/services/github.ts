@@ -1,6 +1,6 @@
 import { logger } from '../utils/logger';
 import { APP_CONFIG, ERROR_MESSAGES } from '../constants';
-import { GitHubPRDetails } from '../types';
+import { GitHubPRDetails, AiReviewComment } from '../types';
 
 /**
  * Parses a pull request input string which can be a full URL, owner/repo#number,
@@ -86,4 +86,58 @@ export async function fetchPRDiff(owner: string, repo: string, pullNumber: numbe
   const diff = await response.text();
   logger.debug({ diffLength: diff.length }, 'Successfully retrieved PR diff');
   return diff;
+}
+
+/**
+ * Publishes AI review comments to a GitHub pull request.
+ * 
+ * @param owner - The owner of the repository.
+ * @param repo - The name of the repository.
+ * @param pullNumber - The pull request number.
+ * @param accessToken - GitHub access token for authenticated requests.
+ * @param aiComments - Array of AI review comments to publish.
+ * @returns A promise that resolves when the review is successfully published.
+ * @throws Error if the API request fails.
+ */
+export async function publishPRReview(
+  owner: string, 
+  repo: string, 
+  pullNumber: number, 
+  accessToken: string, 
+  aiComments: AiReviewComment[]
+): Promise<void> {
+  const url = `${APP_CONFIG.GITHUB.BASE_URL}/repos/${owner}/${repo}/pulls/${pullNumber}/reviews`;
+  
+  logger.debug({ owner, repo, pullNumber }, 'Publishing PR review to GitHub API');
+
+  const comments = aiComments.map(c => ({
+    path: c.filePath,
+    line: c.lineNumber,
+    body: `**AI Review (${c.severity.toUpperCase()})**: ${c.content}`
+  }));
+
+  const payload = {
+    event: 'COMMENT',
+    body: 'AI-Powered Code Review Feedback',
+    comments
+  };
+
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: {
+      Accept: 'application/vnd.github.v3+json',
+      Authorization: `Bearer ${accessToken}`,
+      'Content-Type': 'application/json',
+      'X-GitHub-Api-Version': APP_CONFIG.GITHUB.API_VERSION
+    },
+    body: JSON.stringify(payload)
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text().catch(() => 'Unknown error text');
+    logger.error({ status: response.status, statusText: response.statusText, errorText, owner, repo, pullNumber }, 'GitHub API error when publishing review');
+    throw new Error('Failed to publish PR review to GitHub');
+  }
+
+  logger.info({ owner, repo, pullNumber, commentsCount: comments.length }, 'Successfully published PR review');
 }

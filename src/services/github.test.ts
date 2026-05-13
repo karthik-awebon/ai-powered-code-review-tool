@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { parsePRInput, fetchPRDiff } from './github';
+import { parsePRInput, fetchPRDiff, publishPRReview } from './github';
+import { AiReviewComment } from '../types';
 
 vi.mock('../utils/logger', () => ({
   logger: {
@@ -94,5 +95,65 @@ describe('fetchPRDiff', () => {
     });
 
     await expect(fetchPRDiff('owner', 'repo', 123)).rejects.toThrow('Failed to retrieve the pull request details. Please check the URL and your connection.');
+  });
+});
+
+describe('publishPRReview', () => {
+  beforeEach(() => {
+    vi.stubGlobal('fetch', vi.fn());
+  });
+
+  const mockComments: AiReviewComment[] = [
+    {
+      id: '1',
+      filePath: 'src/index.ts',
+      lineNumber: 10,
+      content: 'Consider renaming this variable',
+      confidence: 0.9,
+      severity: 'suggestion'
+    }
+  ];
+
+  it('successfully publishes a review', async () => {
+    (fetch as any).mockResolvedValue({
+      ok: true,
+      text: () => Promise.resolve('ok'),
+    });
+
+    await publishPRReview('owner', 'repo', 123, 'test-token', mockComments);
+
+    expect(fetch).toHaveBeenCalledWith(
+      expect.stringContaining('/repos/owner/repo/pulls/123/reviews'),
+      expect.objectContaining({
+        method: 'POST',
+        headers: expect.objectContaining({
+          Authorization: 'Bearer test-token',
+          'Content-Type': 'application/json'
+        }),
+        body: JSON.stringify({
+          event: 'COMMENT',
+          body: 'AI-Powered Code Review Feedback',
+          comments: [
+            {
+              path: 'src/index.ts',
+              line: 10,
+              body: '**AI Review (SUGGESTION)**: Consider renaming this variable'
+            }
+          ]
+        })
+      })
+    );
+  });
+
+  it('throws error when fetch fails', async () => {
+    (fetch as any).mockResolvedValue({
+      ok: false,
+      status: 500,
+      statusText: 'Internal Server Error',
+      text: () => Promise.resolve('Error details'),
+    });
+
+    await expect(publishPRReview('owner', 'repo', 123, 'test-token', mockComments))
+      .rejects.toThrow('Failed to publish PR review to GitHub');
   });
 });

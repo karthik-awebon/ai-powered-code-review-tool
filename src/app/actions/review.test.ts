@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { submitPRReview } from './review';
+import { submitPRReview, publishReviewAction } from './review';
 import * as github from '../../services/github';
 import * as llm from '../../services/llm';
 
@@ -10,6 +10,7 @@ vi.mock('../../auth', () => ({
 vi.mock('../../services/github', () => ({
   parsePRInput: vi.fn(),
   fetchPRDiff: vi.fn(),
+  publishPRReview: vi.fn(),
 }));
 
 vi.mock('../../services/llm', () => ({
@@ -60,5 +61,62 @@ describe('submitPRReview', () => {
 
     const result = await submitPRReview('valid');
     expect(result).toEqual({ error: 'Fetch failed' });
+  });
+});
+
+describe('publishReviewAction', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  const mockComments = [
+    {
+      id: '1',
+      filePath: 'src/index.ts',
+      lineNumber: 10,
+      content: 'Test comment',
+      confidence: 0.9,
+      severity: 'suggestion' as const
+    }
+  ];
+
+  it('returns error if user is not authenticated', async () => {
+    const { auth } = await import('../../auth');
+    (auth as any).mockResolvedValue(null);
+
+    const result = await publishReviewAction('owner/repo#123', mockComments);
+    expect(result).toEqual({ error: 'You must be signed in to publish reviews to GitHub.' });
+  });
+
+  it('returns error if PR input is invalid', async () => {
+    const { auth } = await import('../../auth');
+    (auth as any).mockResolvedValue({ accessToken: 'test-token' });
+    (github.parsePRInput as any).mockReturnValue(null);
+
+    const result = await publishReviewAction('invalid', mockComments);
+    expect(result).toEqual({ error: 'Invalid GitHub PR input format' });
+  });
+
+  it('successfully publishes review and returns success', async () => {
+    const { auth } = await import('../../auth');
+    (auth as any).mockResolvedValue({ accessToken: 'test-token' });
+    const prDetails = { owner: 'owner', repo: 'repo', pullNumber: 123 };
+    (github.parsePRInput as any).mockReturnValue(prDetails);
+    (github.publishPRReview as any).mockResolvedValue(undefined);
+
+    const result = await publishReviewAction('owner/repo#123', mockComments);
+    expect(result).toEqual({ success: true });
+    expect(github.publishPRReview).toHaveBeenCalledWith('owner', 'repo', 123, 'test-token', mockComments);
+  });
+
+  it('returns error if publishing fails', async () => {
+    const { auth } = await import('../../auth');
+    (auth as any).mockResolvedValue({ accessToken: 'test-token' });
+    const prDetails = { owner: 'owner', repo: 'repo', pullNumber: 123 };
+    (github.parsePRInput as any).mockReturnValue(prDetails);
+    (github.publishPRReview as any).mockRejectedValue(new Error('API Error'));
+
+    const result = await publishReviewAction('owner/repo#123', mockComments);
+    expect(result).toEqual({ error: 'API Error' });
   });
 });

@@ -6,11 +6,16 @@ import { EmptyState } from '../ui/EmptyState';
 import { SkeletonComment } from '../ui/SkeletonComment';
 import { ErrorMessage } from '../ui/ErrorMessage';
 import { parsePRInput } from '../../services/github';
+import { publishReviewAction } from '../../app/actions/review';
 import { useDefaultRepo } from '../../hooks/useDefaultRepo';
 import { useRecentReviews } from '../../hooks/useRecentReviews';
 import { useReviewSubmission } from '../../hooks/useReviewSubmission';
 import { useReviewComments, SortOrder } from '../../hooks/useReviewComments';
 import styles from './ReviewForm.module.css';
+
+interface ReviewFormProps {
+  isAuthenticated?: boolean;
+}
 
 /**
  * ReviewForm component that serves as the main entry point for the review process.
@@ -21,8 +26,11 @@ import styles from './ReviewForm.module.css';
  * 
  * @returns The complete review interface including input form and result display.
  */
-export function ReviewForm() {
+export function ReviewForm({ isAuthenticated = false }: ReviewFormProps) {
   const [url, setUrl] = useState('');
+  const [isPublishing, setIsPublishing] = useState(false);
+  const [publishError, setPublishError] = useState<string | null>(null);
+  const [publishSuccess, setPublishSuccess] = useState(false);
 
   const { defaultRepo, saveDefaultRepo, isLoaded: isRepoLoaded } = useDefaultRepo();
   const { recentReviews, addRecentReview, isLoaded: isReviewsLoaded } = useRecentReviews();
@@ -54,13 +62,33 @@ export function ReviewForm() {
 
   const handleSubmit = (e?: FormEvent, targetInput?: string) => {
     e?.preventDefault();
+    setPublishSuccess(false);
+    setPublishError(null);
     submitReview(targetInput || url);
   };
 
   const handleExamplePR = () => {
     const example = 'vercel/next.js/pull/76505';
     setUrl(example);
+    setPublishSuccess(false);
+    setPublishError(null);
     submitReview(example);
+  };
+
+  const handlePublish = async () => {
+    setIsPublishing(true);
+    setPublishError(null);
+    setPublishSuccess(false);
+    
+    const targetInput = url || (recentReviews.length > 0 ? recentReviews[0].inputString : '');
+    const result = await publishReviewAction(targetInput, comments, defaultRepo);
+    
+    setIsPublishing(false);
+    if (result.error) {
+      setPublishError(result.error);
+    } else {
+      setPublishSuccess(true);
+    }
   };
 
   let buttonText = 'Review PR';
@@ -161,27 +189,52 @@ export function ReviewForm() {
 
       {hasComments && (
         <div className={styles.filtersContainer}>
-          <label className={styles.checkboxLabel}>
-            <input 
-              type="checkbox" 
-              checked={showOnlyCritical} 
-              onChange={(e) => setShowOnlyCritical(e.target.checked)} 
-            />
-            Show Critical Only
-          </label>
-          <div className={styles.sortContainer}>
-            <label htmlFor="sortConf">Sort by Confidence:</label>
-            <select 
-              id="sortConf"
-              value={sortByConfidence} 
-              onChange={(e) => setSortByConfidence(e.target.value as SortOrder)}
-              className={styles.sortSelect}
-            >
-              <option value="none">None</option>
-              <option value="desc">High to Low</option>
-              <option value="asc">Low to High</option>
-            </select>
+          <div className={styles.filterControls}>
+            <label className={styles.checkboxLabel}>
+              <input 
+                type="checkbox" 
+                checked={showOnlyCritical} 
+                onChange={(e) => setShowOnlyCritical(e.target.checked)} 
+              />
+              Show Critical Only
+            </label>
+            <div className={styles.sortContainer}>
+              <label htmlFor="sortConf">Sort by Confidence:</label>
+              <select 
+                id="sortConf"
+                value={sortByConfidence} 
+                onChange={(e) => setSortByConfidence(e.target.value as SortOrder)}
+                className={styles.sortSelect}
+              >
+                <option value="none">None</option>
+                <option value="desc">High to Low</option>
+                <option value="asc">Low to High</option>
+              </select>
+            </div>
           </div>
+          
+          {isAuthenticated && (
+            <div className={styles.publishContainer}>
+              <button
+                type="button"
+                onClick={handlePublish}
+                disabled={isPublishing}
+                className={styles.publishButton}
+              >
+                {isPublishing ? 'Publishing...' : 'Publish to GitHub'}
+              </button>
+              {publishSuccess && (
+                <span className={styles.publishSuccess}>
+                  ✓ Published successfully
+                </span>
+              )}
+            </div>
+          )}
+          {publishError && (
+            <div className={styles.publishError}>
+              ✗ {publishError}
+            </div>
+          )}
         </div>
       )}
 
